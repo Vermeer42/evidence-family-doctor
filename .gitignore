@@ -1,0 +1,8 @@
+config/
+data/
+output/
+*.env
+*.env.local
+.wrangler/
+node_modules/
+.next/
