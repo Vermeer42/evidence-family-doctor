@@ -132,3 +132,21 @@
   border-left: 2px solid #e5e7eb;
   margin-top: 8px;
 }
+
+/* Source cards — structured evidence references */
+.source-cards-container {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.source-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+}
+.source-card:hover {
+  border-color: #14b8a6;
+  background: #f0fdfa;
+}

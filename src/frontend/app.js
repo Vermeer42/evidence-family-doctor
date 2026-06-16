@@ -160,6 +160,7 @@ async function sendMessage(text) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let sources = []; // Will be filled when sources event arrives
 
     while (true) {
       const { done, value } = await reader.read();
@@ -181,16 +182,19 @@ async function sendMessage(text) {
             contentEl.innerHTML = renderMarkdown(aiResponse);
             scrollToBottom();
           }
+          if (parsed.sources) {
+            sources = parsed.sources;
+          }
         } catch {
           // skip malformed
         }
       }
     }
 
-    // Final render with full formatting (re-render to apply all formatting rules cleanly)
-    contentEl.innerHTML = renderAIResponse(aiResponse);
+    // Final render with full formatting + source cards
+    contentEl.innerHTML = renderAIResponse(aiResponse, sources);
     scrollToBottom();
-    conversationHistory.push({ role: 'assistant', content: aiResponse });
+    conversationHistory.push({ role: 'assistant', content: aiResponse, sources });
 
     // Auto-save after each complete response
     saveCurrentChat();
@@ -250,7 +254,7 @@ function appendLoading() {
 
 // ============ AI Response Formatting ============
 
-function renderAIResponse(text) {
+function renderAIResponse(text, sources = []) {
   let html = text;
 
   // Extract and render red flag banners (can have multiple)
@@ -278,41 +282,72 @@ function renderAIResponse(text) {
   }
   html = html.replace(/\[RED_FLAG:(immediate|soon|routine)\]\s*/g, '');
 
-  // Render evidence level header — make it a prominent card
+  // Render evidence level header — user-friendly wording
   html = html.replace(
     /【证据等级：(.*?)】/g,
     (_, level) => {
       const cls = getEvidenceClass(level);
-      return `<div class="evidence-badge ${cls}" style="margin:8px 0;padding:6px 14px;font-size:14px;">${level}</div>`;
+      const friendly = getFriendlyLevel(level);
+      return `<div class="evidence-badge ${cls}" style="margin:8px 0;padding:6px 14px;font-size:14px;">${friendly}</div>`;
     }
   );
 
-  // Render inline evidence markers — compact pills
-  html = html.replace(/🟢/g, '<span class="evidence-badge green" style="display:inline-flex;padding:1px 6px;font-size:11px;vertical-align:middle;">🟢强</span>');
-  html = html.replace(/🟡/g, '<span class="evidence-badge yellow" style="display:inline-flex;padding:1px 6px;font-size:11px;vertical-align:middle;">🟡一般</span>');
-  html = html.replace(/🔵/g, '<span class="evidence-badge blue" style="display:inline-flex;padding:1px 6px;font-size:11px;vertical-align:middle;">🔵共识</span>');
-  html = html.replace(/🔴/g, '<span class="evidence-badge red" style="display:inline-flex;padding:1px 6px;font-size:11px;vertical-align:middle;">🔴参考</span>');
+  // Render inline evidence markers — user-friendly compact pills
+  html = html.replace(/🟢/g, '<span class="evidence-badge green" style="display:inline-flex;padding:1px 6px;font-size:11px;vertical-align:middle;">🟢 大量研究证实</span>');
+  html = html.replace(/🟡/g, '<span class="evidence-badge yellow" style="display:inline-flex;padding:1px 6px;font-size:11px;vertical-align:middle;">🟡 有研究支持</span>');
+  html = html.replace(/🔵/g, '<span class="evidence-badge blue" style="display:inline-flex;padding:1px 6px;font-size:11px;vertical-align:middle;">🔵 医生经验</span>');
+  html = html.replace(/🔴/g, '<span class="evidence-badge red" style="display:inline-flex;padding:1px 6px;font-size:11px;vertical-align:middle;">🔴 仅供参考</span>');
 
-  // Render source references — collapsible section
-  html = html.replace(
-    /(?:证据来源|参考来源|来源)[：:]\s*\n([\s\S]*?)(?=\n\n|$)/g,
-    (_, sources) => {
-      const sourceItems = sources.trim().split('\n').filter(s => s.trim());
-      if (sourceItems.length === 0) return '';
-      return `
-        <div class="source-toggle" onclick="this.nextElementSibling.classList.toggle('hidden')">
-          📚 证据来源 (${sourceItems.length}) ▾
-        </div>
-        <div class="source-list hidden">
-          ${sourceItems.map(s => `<p class="py-1">${s.replace(/^[\-•\d.]+\s*/, '')}</p>`).join('')}
-        </div>`;
-    }
-  );
+  // Remove any text-based source section (we render structured sources below)
+  html = html.replace(/(?:证据来源|参考来源|来源)[：:]\s*\n[\s\S]*?(?=\n\n|$)/g, '');
 
   // Basic markdown rendering
   html = renderMarkdown(html);
 
-  return redFlagHtml + html;
+  // Render structured source cards (from backend)
+  let sourcesHtml = '';
+  if (sources.length > 0) {
+    const sourceCards = sources.map(s => {
+      const levelInfo = getSourceLevelInfo(s.evidenceLevel);
+      return `
+        <div class="source-card">
+          <div class="flex items-start justify-between gap-2">
+            <p class="font-medium text-gray-800">${escapeHtml(s.title)}</p>
+            <span class="evidence-badge ${levelInfo.cls}" style="font-size:11px;padding:1px 6px;white-space:nowrap;">${levelInfo.label}</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">来源：${escapeHtml(s.source)}</p>
+          <p class="text-sm text-gray-600 mt-2">${escapeHtml(s.content)}</p>
+        </div>`;
+    }).join('');
+
+    sourcesHtml = `
+      <div class="source-toggle" onclick="this.nextElementSibling.classList.toggle('hidden')">
+        📚 查看医学依据 (${sources.length}条) ▾
+      </div>
+      <div class="source-cards-container hidden">
+        ${sourceCards}
+      </div>`;
+  }
+
+  return redFlagHtml + html + sourcesHtml;
+}
+
+function getFriendlyLevel(text) {
+  if (text.includes('🟢') || text.includes('强')) return '🟢 大量研究证实，非常可靠';
+  if (text.includes('🟡') || text.includes('一般')) return '🟡 有研究支持，比较可靠';
+  if (text.includes('🔵') || text.includes('共识')) return '🔵 基于医生经验，可以参考';
+  if (text.includes('🔴') || text.includes('参考')) return '🔴 尚无充分研究，仅供参考';
+  return '🔵 基于医生经验，可以参考';
+}
+
+function getSourceLevelInfo(level) {
+  const map = {
+    A: { cls: 'green', label: '🟢 可靠' },
+    B: { cls: 'yellow', label: '🟡 较可靠' },
+    C: { cls: 'blue', label: '🔵 参考' },
+    D: { cls: 'red', label: '🔴 待验证' },
+  };
+  return map[level] || map.C;
 }
 
 function getEvidenceClass(text) {
@@ -383,7 +418,12 @@ function renderHistory() {
         conversationHistory = item.messages;
         messagesContainer.innerHTML = '';
         item.messages.forEach(msg => {
-          appendMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
+          if (msg.role === 'user') {
+            appendMessage('user', msg.content);
+          } else {
+            const el = appendMessage('ai', '');
+            el.querySelector('.msg-content').innerHTML = renderAIResponse(msg.content, msg.sources || []);
+          }
         });
         showView('chat');
       }

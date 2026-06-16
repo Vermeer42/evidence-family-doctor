@@ -126,8 +126,16 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
 
-  // Process Claude's SSE stream in background
-  streamClaudeResponse(response.body!, writer, encoder);
+  // Format sources metadata for frontend
+  const sourcesPayload = searchResults.map(r => ({
+    title: r.chunk.title,
+    source: r.chunk.source,
+    evidenceLevel: r.chunk.evidence_level,
+    content: r.chunk.content.slice(0, 150) + (r.chunk.content.length > 150 ? '...' : ''),
+  }));
+
+  // Process Claude's SSE stream in background, then send sources
+  streamClaudeResponse(response.body!, writer, encoder, sourcesPayload);
 
   return new Response(readable, {
     headers: {
@@ -145,7 +153,8 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 async function streamClaudeResponse(
   body: ReadableStream,
   writer: WritableStreamDefaultWriter,
-  encoder: TextEncoder
+  encoder: TextEncoder,
+  sources: { title: string; source: string; evidenceLevel: string; content: string }[]
 ) {
   const reader = body.getReader();
   const decoder = new TextDecoder();
@@ -174,8 +183,12 @@ async function streamClaudeResponse(
             await writer.write(encoder.encode(sseMessage));
           }
 
-          // Forward stop event
+          // Forward stop event — also send sources metadata
           if (event.type === 'message_stop') {
+            if (sources.length > 0) {
+              const sourcesMsg = `data: ${JSON.stringify({ sources })}\n\n`;
+              await writer.write(encoder.encode(sourcesMsg));
+            }
             await writer.write(encoder.encode('data: [DONE]\n\n'));
           }
         } catch {
