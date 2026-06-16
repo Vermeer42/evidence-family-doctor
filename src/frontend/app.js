@@ -6,7 +6,7 @@
  */
 
 // ============ Configuration ============
-const API_BASE = 'http://localhost:8787'; // Dev: local worker; Prod: same domain
+const API_BASE = location.hostname === 'localhost' ? 'http://localhost:8787' : '';
 
 // ============ DOM References ============
 const viewHome = document.getElementById('view-home');
