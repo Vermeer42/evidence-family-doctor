@@ -48,8 +48,8 @@ Phase 5: 部署上线 + GitHub展示
 - [x] 项目初始化 + 框架确定
 - [x] Phase 0: 竞品调研 → `docs/00-research/competitive-analysis.md`
 - [x] Phase 1: 产品定义(PRD) → `docs/01-product/PRD.md`
-- [ ] Phase 2: 设计（证据分级详细规则 + 就医红线 + 交互设计）← 下一步
-- [ ] Phase 3: 开发（后端 → RAG → 前端）
+- [x] Phase 2: 设计 → `docs/02-design/` (evidence-grading / red-flags / interaction-flow)
+- [ ] Phase 3: 开发（后端 → RAG → 前端）← 下一步
 - [ ] Phase 4: 测试与质量评估
 - [ ] Phase 5: 部署上线 + GitHub展示
 
@@ -61,6 +61,13 @@ Phase 5: 部署上线 + GitHub展示
 - 就医红线：依然给信息，但顶部大红色横幅强制提醒就医
 - MVP范围：文字问答 + 体检报告解读 + 症状照片识别(全部🔴+强制面诊) + 就医红线 + 来源引用
 - 不做：用药相互作用、健康档案、家庭成员管理（v2+）
+
+### Phase 2 关键决策
+- 证据展示：混合模式（总等级 + 关键建议单独标注），总等级取所有建议中最低级
+- 就医红线判定：LLM自主判断（非关键词匹配），以不漏报为优先原则
+- 红线三级：immediate(立即就医/120) / soon(24h内) / routine(1周内)
+- 输入：支持打字 + 语音（Browser Speech API转文字，用户确认后发送），打字为主
+- 适老化：最小字体16px、触控区≥48px、最多2步到达任何功能、无滑动手势依赖
 
 ## 运行方式
 （待开发阶段补充）
