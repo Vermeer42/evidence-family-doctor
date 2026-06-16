@@ -206,8 +206,8 @@ async function sendMessage(text) {
     contentEl.innerHTML = `
       <div class="text-red-600">
         <p class="font-medium">❌ ${escapeHtml(err.message)}</p>
-        <p class="text-sm mt-1 text-gray-500">请检查网络连接后重试</p>
-        <button onclick="retryLastMessage()" class="mt-3 px-4 py-2 bg-primary-600 text-white rounded-full text-sm hover:bg-primary-700 transition">
+        <p class="text-sm mt-1 text-slate-500">请检查网络连接后重试</p>
+        <button onclick="retryLastMessage()" class="mt-3 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm hover:bg-brand-500 transition">
           重新发送
         </button>
       </div>`;
@@ -242,7 +242,7 @@ function appendLoading() {
   wrapper.className = 'flex justify-start';
   wrapper.innerHTML = `
     <div class="msg-ai">
-      <p class="text-sm text-gray-500 mb-1">正在查阅医学资料...</p>
+      <p class="text-sm text-slate-400 mb-1">正在查阅医学资料...</p>
       <div class="typing-indicator">
         <span></span><span></span><span></span>
       </div>
@@ -312,11 +312,11 @@ function renderAIResponse(text, sources = []) {
       return `
         <div class="source-card">
           <div class="flex items-start justify-between gap-2">
-            <p class="font-medium text-gray-800">${escapeHtml(s.title)}</p>
+            <p class="font-medium text-slate-800">${escapeHtml(s.title)}</p>
             <span class="evidence-badge ${levelInfo.cls}" style="font-size:11px;padding:1px 6px;white-space:nowrap;">${levelInfo.label}</span>
           </div>
-          <p class="text-xs text-gray-500 mt-1">来源：${escapeHtml(s.source)}</p>
-          <p class="text-sm text-gray-600 mt-2">${escapeHtml(s.content)}</p>
+          <p class="text-xs text-slate-500 mt-1">来源：${escapeHtml(s.source)}</p>
+          <p class="text-sm text-slate-600 mt-2">${escapeHtml(s.content)}</p>
         </div>`;
     }).join('');
 
@@ -359,9 +359,39 @@ function getEvidenceClass(text) {
 }
 
 function renderMarkdown(text) {
+  // Parse tables first (before line break replacements)
+  text = text.replace(/(?:^|\n)((?:\|.+\|[ \t]*\n)+)/g, (match, tableBlock) => {
+    const rows = tableBlock.trim().split('\n').filter(r => r.trim());
+    // Skip separator rows (|---|---|)
+    const dataRows = rows.filter(r => !/^\|[\s\-:]+\|$/.test(r.replace(/\|/g, '|').trim()));
+    if (dataRows.length === 0) return match;
+
+    let html = '<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:14px;">';
+    dataRows.forEach((row, i) => {
+      const cells = row.split('|').filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+      const tag = i === 0 ? 'th' : 'td';
+      const bgStyle = i === 0 ? 'background:#f1f5f9;font-weight:600;' : '';
+      html += '<tr>';
+      cells.forEach(cell => {
+        html += `<${tag} style="padding:8px 12px;border:1px solid #e2e8f0;text-align:left;${bgStyle}">${cell.trim()}</${tag}>`;
+      });
+      html += '</tr>';
+    });
+    html += '</table>';
+    return html;
+  });
+
   return text
+    // Horizontal rules
+    .replace(/^---+$/gm, '<hr style="border:0;border-top:1px solid #e2e8f0;margin:12px 0;">')
+    // Headings (### → h4, ## → h3, # → h2)
+    .replace(/^###\s+(.+)/gm, '<h4 style="font-size:15px;font-weight:600;margin-top:14px;margin-bottom:4px;color:#1e293b;">$1</h4>')
+    .replace(/^##\s+(.+)/gm, '<h3 style="font-size:16px;font-weight:600;margin-top:16px;margin-bottom:4px;color:#1e293b;">$1</h3>')
+    .replace(/^#\s+(.+)/gm, '<h2 style="font-size:18px;font-weight:700;margin-top:16px;margin-bottom:6px;color:#0f172a;">$1</h2>')
     // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Blockquotes
+    .replace(/^>\s+(.+)/gm, '<div style="border-left:3px solid #e2e8f0;padding-left:12px;color:#475569;margin:8px 0;">$1</div>')
     // Line breaks
     .replace(/\n\n/g, '</p><p style="margin-top:8px;">')
     .replace(/\n/g, '<br>')
@@ -403,9 +433,9 @@ function renderHistory() {
   }
   historySection.classList.remove('hidden');
   historyList.innerHTML = history.map(item => `
-    <button class="w-full text-left p-3 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition" data-id="${item.id}">
-      <p class="text-elder text-gray-700 truncate">${escapeHtml(item.title)}</p>
-      <p class="text-xs text-gray-400 mt-1">${item.time}</p>
+    <button class="w-full text-left p-3 rounded-lg transition" data-id="${item.id}">
+      <p class="text-sm truncate">${escapeHtml(item.title)}</p>
+      <p class="text-xs mt-1">${item.time}</p>
     </button>
   `).join('');
 
