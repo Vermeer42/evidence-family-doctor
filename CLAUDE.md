@@ -49,7 +49,11 @@ Phase 5: 部署上线 + GitHub展示
 - [x] Phase 0: 竞品调研 → `docs/00-research/competitive-analysis.md`
 - [x] Phase 1: 产品定义(PRD) → `docs/01-product/PRD.md`
 - [x] Phase 2: 设计 → `docs/02-design/` (evidence-grading / red-flags / interaction-flow)
-- [ ] Phase 3: 开发（后端 → RAG → 前端）← 下一步
+- [ ] Phase 3: 开发（后端 → RAG → 前端）← 当前进行中
+  - [x] 3.1 Workers后端骨架 + Claude API流式调用（已验证通过）
+  - [ ] 3.2 RAG知识库（收集指南 → 分块 → 向量化）← 下一步
+  - [ ] 3.3 前端（Next.js 适老化UI）
+  - [ ] 3.4 前后端联调 + 图片上传 + 语音输入
 - [ ] Phase 4: 测试与质量评估
 - [ ] Phase 5: 部署上线 + GitHub展示
 
@@ -70,7 +74,15 @@ Phase 5: 部署上线 + GitHub展示
 - 适老化：最小字体16px、触控区≥48px、最多2步到达任何功能、无滑动手势依赖
 
 ## 运行方式
-（待开发阶段补充）
+```bash
+# 本地开发
+npm run dev          # 启动 Workers 本地服务（localhost:8787）
+npm test             # 运行测试脚本
+
+# 部署（后续）
+npm run deploy       # 部署到 Cloudflare Workers
+```
+需要先创建 `.dev.vars` 文件填入 API key（参考 `.dev.vars.example`）
 
 ## 关键决策记录
 | 日期 | 决策 | 原因 |
@@ -80,3 +92,4 @@ Phase 5: 部署上线 + GitHub展示
 | 2026-06-15 | 先做网页不做小程序 | 避开医疗类目审核，demo阶段更灵活 |
 | 2026-06-15 | 核心差异化是RAG证据库 | 区别于模型记忆，来源可追溯可验证 |
 | 2026-06-15 | GitHub名：中国人的家庭医生 | 对外亲切，用户侧再包装 |
+| 2026-06-15 | API通过中转地址调用 | 国内直连api.anthropic.com被墙；部署后Workers在海外调用，用户无需代理 |
