@@ -160,6 +160,8 @@ async function streamClaudeResponse(
   const decoder = new TextDecoder();
   let buffer = '';
 
+  let sentDone = false;
+
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -190,11 +192,21 @@ async function streamClaudeResponse(
               await writer.write(encoder.encode(sourcesMsg));
             }
             await writer.write(encoder.encode('data: [DONE]\n\n'));
+            sentDone = true;
           }
         } catch {
           // Skip malformed JSON lines
         }
       }
+    }
+
+    // Fallback: if stream ended without message_stop (some proxies don't send it)
+    if (!sentDone) {
+      if (sources.length > 0) {
+        const sourcesMsg = `data: ${JSON.stringify({ sources })}\n\n`;
+        await writer.write(encoder.encode(sourcesMsg));
+      }
+      await writer.write(encoder.encode('data: [DONE]\n\n'));
     }
   } catch (err) {
     console.error('Stream processing error:', err);
