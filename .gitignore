@@ -3,6 +3,7 @@ data/
 output/
 *.env
 *.env.local
+.dev.vars
 .wrangler/
 node_modules/
 .next/

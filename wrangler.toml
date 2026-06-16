@@ -1,0 +1,9 @@
+name = "evidence-family-doctor"
+main = "src/worker/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+ENVIRONMENT = "development"
+
+# 本地开发时，secrets 从 .dev.vars 读取
+# 部署时通过 wrangler secret put ANTHROPIC_API_KEY 设置
