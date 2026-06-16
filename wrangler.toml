@@ -4,6 +4,8 @@ compatibility_date = "2024-12-01"
 
 [vars]
 ENVIRONMENT = "development"
+ANTHROPIC_BASE_URL = "https://www.fucheers.top/v1"
+ANTHROPIC_MODEL = "claude-sonnet-4-6"
 
-# 本地开发时，secrets 从 .dev.vars 读取
-# 部署时通过 wrangler secret put ANTHROPIC_API_KEY 设置
+# ANTHROPIC_API_KEY is a secret — loaded from .dev.vars locally
+# Deploy: wrangler secret put ANTHROPIC_API_KEY

@@ -9,6 +9,8 @@
 
 export interface Env {
   ANTHROPIC_API_KEY: string;
+  ANTHROPIC_BASE_URL: string; // API base URL (supports proxy/relay)
+  ANTHROPIC_MODEL: string;    // Model name
   ENVIRONMENT: string;
 }
 
@@ -67,7 +69,10 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   messages.push({ role: 'user', content: body.message });
 
   // Call Claude API with streaming
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const apiBase = env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/v1';
+  const model = env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
+
+  const response = await fetch(`${apiBase}/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -75,7 +80,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model,
       max_tokens: 2048,
       stream: true,
       system: SYSTEM_PROMPT,
@@ -86,6 +91,10 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   if (!response.ok) {
     const errText = await response.text();
     console.error('Claude API error:', response.status, errText);
+    // In dev mode, return detailed error for debugging
+    if (env.ENVIRONMENT === 'development') {
+      return jsonResponse({ error: '服务暂时不可用', status: response.status, detail: errText }, 502);
+    }
     return jsonResponse({ error: '服务暂时不可用，请稍后再试' }, 502);
   }
 
