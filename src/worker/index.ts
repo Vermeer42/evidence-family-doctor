@@ -2,10 +2,14 @@
  * Evidence Family Doctor — Cloudflare Workers Backend
  *
  * Handles:
- * - POST /api/chat — streaming health Q&A with evidence grading
+ * - POST /api/chat — streaming health Q&A with RAG retrieval + evidence grading
  * - POST /api/chat/image — image upload + health Q&A
  * - GET /api/health — health check
  */
+
+import { BM25Index, type GuidelineChunk, type SearchResult } from './search';
+import guidelinesData from '../../data/processed/guidelines.json';
+import synonymsData from '../../data/processed/synonyms.json';
 
 export interface Env {
   ANTHROPIC_API_KEY: string;
@@ -13,6 +17,12 @@ export interface Env {
   ANTHROPIC_MODEL: string;    // Model name
   ENVIRONMENT: string;
 }
+
+// Initialize search index (loaded once at worker startup)
+const searchIndex = new BM25Index(
+  guidelinesData as GuidelineChunk[],
+  synonymsData as Record<string, string[]>
+);
 
 // CORS headers for frontend access
 const corsHeaders = {
@@ -52,7 +62,7 @@ export default {
 };
 
 /**
- * Handle chat request — streams Claude response back to client
+ * Handle chat request — RAG retrieval + streams Claude response back to client
  */
 async function handleChat(request: Request, env: Env): Promise<Response> {
   const body = await request.json() as { message: string; history?: Message[] };
@@ -61,12 +71,25 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
     return jsonResponse({ error: '请输入您的健康问题' }, 400);
   }
 
+  // Step 1: RAG retrieval — find relevant guideline chunks
+  const searchResults = searchIndex.search(body.message, 5);
+  const ragContext = formatRAGContext(searchResults);
+
   // Build messages array with conversation history
   const messages: Message[] = [];
   if (body.history && Array.isArray(body.history)) {
     messages.push(...body.history.slice(-10)); // Keep last 10 turns
   }
-  messages.push({ role: 'user', content: body.message });
+
+  // Step 2: Inject RAG context as a system-level reference before user message
+  if (ragContext) {
+    messages.push({
+      role: 'user',
+      content: `[系统检索到以下相关医学指南内容，请优先参考这些内容回答，并在回答中引用来源]\n\n${ragContext}\n\n---\n用户实际问题：${body.message}`,
+    });
+  } else {
+    messages.push({ role: 'user', content: body.message });
+  }
 
   // Call Claude API with streaming
   const apiBase = env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/v1';
@@ -177,6 +200,30 @@ function jsonResponse(data: unknown, status = 200): Response {
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+}
+
+/**
+ * Format RAG search results into context string for Claude
+ */
+function formatRAGContext(results: SearchResult[]): string {
+  if (results.length === 0) return '';
+
+  const sections = results.map((r, i) => {
+    const levelMap: Record<string, string> = {
+      A: '🟢强证据',
+      B: '🟡一般证据',
+      C: '🔵专家共识',
+      D: '🔴仅供参考',
+    };
+    const level = levelMap[r.chunk.evidence_level] || '🔵专家共识';
+
+    return `【参考${i + 1}】${r.chunk.title}
+来源：${r.chunk.source}
+证据等级：${level}
+内容：${r.chunk.content}`;
+  });
+
+  return sections.join('\n\n');
 }
 
 // ============================================

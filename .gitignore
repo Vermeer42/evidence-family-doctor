@@ -1,5 +1,7 @@
 config/
-data/
+data/raw/
+data/vectors/
+!data/processed/
 output/
 *.env
 *.env.local

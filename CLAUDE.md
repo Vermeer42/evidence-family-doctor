@@ -51,7 +51,7 @@ Phase 5: 部署上线 + GitHub展示
 - [x] Phase 2: 设计 → `docs/02-design/` (evidence-grading / red-flags / interaction-flow)
 - [ ] Phase 3: 开发（后端 → RAG → 前端）← 当前进行中
   - [x] 3.1 Workers后端骨架 + Claude API流式调用（已验证通过）
-  - [ ] 3.2 RAG知识库（收集指南 → 分块 → 向量化）← 下一步
+  - [x] 3.2 RAG知识库（BM25关键词检索 + 同义词扩展，种子数据6病种27条）← 已完成
   - [ ] 3.3 前端（Next.js 适老化UI）
   - [ ] 3.4 前后端联调 + 图片上传 + 语音输入
 - [ ] Phase 4: 测试与质量评估
@@ -93,3 +93,5 @@ npm run deploy       # 部署到 Cloudflare Workers
 | 2026-06-15 | 核心差异化是RAG证据库 | 区别于模型记忆，来源可追溯可验证 |
 | 2026-06-15 | GitHub名：中国人的家庭医生 | 对外亲切，用户侧再包装 |
 | 2026-06-15 | API通过中转地址调用 | 国内直连api.anthropic.com被墙；部署后Workers在海外调用，用户无需代理 |
+| 2026-06-16 | RAG用BM25关键词方案（非向量） | 中转站不支持embedding API；15-20份文档关键词方案够用，零成本零依赖；架构预留升级接口 |
+| 2026-06-16 | 种子数据先行，后补完整PDF | 先用手写核心推荐跑通pipeline，验证技术方案可行后再补充 |
