@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f766e">
+  <title>家庭医生 — 循证健康问答</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏥</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏥</text></svg>">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 800: '#115e59' },
+            danger: { 50: '#fef2f2', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c' },
+          },
+          fontSize: {
+            'elder': '1rem',      /* 16px base */
+            'elder-lg': '1.125rem', /* 18px input */
+            'elder-xl': '1.5rem',  /* 24px title */
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+  <div id="app" class="max-w-lg mx-auto min-h-screen flex flex-col">
+
+    <!-- ========== 首页 ========== -->
+    <div id="view-home" class="flex flex-col flex-1">
+      <!-- 顶部栏 -->
+      <header class="bg-primary-700 text-white px-5 py-4">
+        <h1 class="text-elder-xl font-bold flex items-center gap-2">
+          <span>🏥</span> 家庭医生
+        </h1>
+        <p class="text-primary-100 text-sm mt-1">基于医学证据的健康问答</p>
+      </header>
+
+      <!-- 输入区域 -->
+      <div class="p-5">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+          <textarea
+            id="home-input"
+            class="w-full text-elder-lg resize-none border-0 focus:ring-0 focus:outline-none placeholder-gray-400"
+            rows="3"
+            placeholder="有什么健康问题想问？"
+          ></textarea>
+          <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+            <div class="flex gap-2">
+              <button class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl hover:bg-gray-200 transition" title="拍照上传">📷</button>
+              <button class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl hover:bg-gray-200 transition" title="语音输入">🎤</button>
+            </div>
+            <button id="home-send-btn" class="h-12 px-6 bg-primary-600 text-white rounded-full font-medium text-elder hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              发送
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 引导卡片 -->
+      <div class="px-5">
+        <p class="text-sm text-gray-500 mb-3">💡 你可以这样问：</p>
+        <div class="grid grid-cols-2 gap-3" id="suggestion-cards">
+          <button class="suggestion-card">血压高要注意什么？</button>
+          <button class="suggestion-card">体检报告看不懂</button>
+          <button class="suggestion-card">感冒了怎么办？</button>
+          <button class="suggestion-card">血糖高饮食怎么控制？</button>
+        </div>
+      </div>
+
+      <!-- 历史记录 -->
+      <div class="px-5 mt-6 flex-1">
+        <div id="history-section" class="hidden">
+          <p class="text-sm text-gray-500 mb-3 border-t border-gray-200 pt-4">📋 历史对话</p>
+          <div id="history-list" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- 底部免责 -->
+      <footer class="px-5 py-4 text-center text-xs text-gray-400">
+        <p>本工具仅供健康参考，不能替代医生诊断</p>
+        <p class="mt-1">回答基于公开医学指南，证据等级仅供参考</p>
+      </footer>
+    </div>
+
+    <!-- ========== 对话页 ========== -->
+    <div id="view-chat" class="hidden flex flex-col flex-1">
+      <!-- 导航栏 -->
+      <header class="bg-primary-700 text-white px-4 py-3 flex items-center justify-between">
+        <button id="back-btn" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-primary-600 transition text-lg">
+          ←
+        </button>
+        <h2 class="font-bold text-lg">家庭医生</h2>
+        <button id="new-chat-btn" class="text-sm bg-primary-600 px-3 py-1.5 rounded-full hover:bg-primary-500 transition">
+          新对话
+        </button>
+      </header>
+
+      <!-- 消息列表 -->
+      <div id="messages" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <!-- Messages will be rendered here by JS -->
+      </div>
+
+      <!-- 底部输入栏 -->
+      <div class="border-t border-gray-200 bg-white px-4 py-3">
+        <div class="flex items-center gap-2">
+          <button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg flex-shrink-0">📷</button>
+          <input
+            id="chat-input"
+            type="text"
+            class="flex-1 h-12 px-4 text-elder-lg border border-gray-300 rounded-full focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            placeholder="输入健康问题..."
+          >
+          <button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg flex-shrink-0">🎤</button>
+          <button id="chat-send-btn" class="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center text-xl flex-shrink-0 hover:bg-primary-700 transition disabled:opacity-50" disabled>
+            ↑
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
