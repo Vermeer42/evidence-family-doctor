@@ -1,45 +1,45 @@
-# Evidence Grading System — Detailed Specification
+# 证据分级体系 — 详细规范
 
-## 1. Four-Tier Grading Table
+## 1. 四级分级表
 
-| Level | Icon | Label | Source Criteria | Confidence Statement |
-|-------|------|-------|----------------|---------------------|
-| A | 🟢 | 强证据 | Systematic reviews, meta-analyses, large RCTs, Cochrane reviews, WHO/国家卫健委一级推荐 | "多项高质量研究一致支持" |
-| B | 🟡 | 一般证据 | Single RCTs, large cohort studies, national guideline recommendations (非一级) | "有较好的研究支持，但证据尚不充分" |
-| C | 🔵 | 专家共识 | Expert consensus, clinical experience summaries, textbook statements, small observational studies | "基于专家经验，缺少大规模研究验证" |
-| D | 🔴 | 仅供参考 | Case reports, mechanism推理, traditional practice without modern validation, AI inference without direct source | "证据有限，仅供参考，建议咨询医生" |
+| 等级 | 图标 | 标签 | 来源标准 | 置信度说明 |
+|------|------|------|---------|-----------|
+| A | 🟢 | 强证据 | 系统综述、Meta分析、大型RCT、Cochrane综述、WHO/国家卫健委一级推荐 | "多项高质量研究一致支持" |
+| B | 🟡 | 一般证据 | 单个RCT、大型队列研究、国家指南推荐（非一级） | "有较好的研究支持，但证据尚不充分" |
+| C | 🔵 | 专家共识 | 专家共识、临床经验总结、教科书陈述、小型观察性研究 | "基于专家经验，缺少大规模研究验证" |
+| D | 🔴 | 仅供参考 | 个案报告、机制推理、未经现代验证的传统做法、AI无直接来源的推断 | "证据有限，仅供参考，建议咨询医生" |
 
-## 2. Grading Assignment Rules
+## 2. 分级判定规则
 
-### 2.1 LLM Judgment Flow
+### 2.1 LLM 判定流程
 
-System prompt instructs the model to:
+系统提示词指导模型执行以下步骤：
 
-1. **Retrieve** relevant documents from RAG knowledge base
-2. **Identify** the highest-quality source supporting each claim
-3. **Map** source type → evidence level using the table above
-4. **Assign** per-claim grade AND overall response grade
+1. **检索**：从 RAG 知识库中获取相关文档
+2. **识别**：找到支持每个论断的最高质量来源
+3. **映射**：根据上表将来源类型 → 证据等级
+4. **标注**：为每条建议标注单独等级，并确定整体回答等级
 
-### 2.2 Overall Response Grade
+### 2.2 整体回答等级
 
-- Take the **lowest** grade among all key claims in the response
-- Rationale: conservative principle — user sees the weakest link
-- Example: if response contains one 🟢 claim and one 🟡 claim → overall 🟡
+- 取回答中所有关键论断的**最低等级**作为总等级
+- 原理：保守原则——让用户看到最薄弱的环节
+- 示例：如果回答中包含一条 🟢 建议和一条 🟡 建议 → 整体为 🟡
 
-### 2.3 Per-Claim Inline Grade
+### 2.3 单条建议内联标注
 
-Each actionable recommendation gets an inline badge:
+每条可执行的建议都附带一个内联标记：
 
 ```
 建议饭后30分钟再运动 🟡
 布洛芬可用于退烧（成人400mg/次）🟢
 ```
 
-Non-actionable context sentences (definitions, anatomy explanations) do NOT get badges.
+非操作性的上下文句子（定义、解剖说明等）不标注。
 
-## 3. Visual Specification
+## 3. 视觉规范
 
-### 3.1 Response Header (Overall Grade)
+### 3.1 回答顶部卡片（总等级）
 
 ```
 ┌─────────────────────────────────────┐
@@ -48,19 +48,19 @@ Non-actionable context sentences (definitions, anatomy explanations) do NOT get 
 └─────────────────────────────────────┘
 ```
 
-- Background: light tint of the grade color (green/yellow/blue/red at 10% opacity)
-- Font: 16px bold for grade label, 13px regular for source summary
-- Position: top of response, sticky during scroll
+- 背景色：等级颜色（绿/黄/蓝/红）10% 透明度淡色底
+- 字体：等级标签 16px 加粗，来源摘要 13px 常规
+- 位置：回答顶部，滚动时吸顶
 
-### 3.2 Inline Badge
+### 3.2 内联标记
 
-- Inline circular icon (12px) + tooltip on tap showing source name
-- Mobile: tap badge → bottom sheet with source title + link
-- Colors: 🟢 #22C55E | 🟡 #EAB308 | 🔵 #3B82F6 | 🔴 #EF4444
+- 行内圆形图标（12px）+ 点击弹出来源名称的提示
+- 移动端：点击标记 → 底部浮层显示来源标题 + 链接
+- 颜色值：🟢 #22C55E | 🟡 #EAB308 | 🔵 #3B82F6 | 🔴 #EF4444
 
-### 3.3 Source Citation Footer
+### 3.3 来源引用脚注
 
-Each response ends with collapsible "📚 证据来源" section:
+每条回答末尾附带可折叠的"📚 证据来源"区域：
 
 ```
 📚 证据来源 (3)
@@ -69,18 +69,18 @@ Each response ends with collapsible "📚 证据来源" section:
 └─ 🔵 临床诊疗专家共识(2022) — 中华内科杂志
 ```
 
-## 4. Edge Cases
+## 4. 边界情况处理
 
-| Scenario | Handling |
-|----------|----------|
-| RAG retrieval returns nothing | Grade = 🔴, prepend "未找到直接证据支持，以下为AI基于医学知识的推理" |
-| Multiple conflicting sources | Show highest + note conflict: "注意：不同指南对此有不同建议" |
-| User asks about unverified folk remedy | Grade = 🔴, answer factually ("目前无高质量研究证实该方法有效") |
-| Symptom photo interpretation | Always 🔴 regardless of confidence, per PRD |
+| 场景 | 处理方式 |
+|------|---------|
+| RAG 检索无结果 | 等级 = 🔴，前缀"未找到直接证据支持，以下为AI基于医学知识的推理" |
+| 多个来源互相矛盾 | 显示最高级来源 + 注明冲突："注意：不同指南对此有不同建议" |
+| 用户询问未验证的民间偏方 | 等级 = 🔴，如实回答（"目前无高质量研究证实该方法有效"） |
+| 症状照片解读 | 无论置信度如何，一律标 🔴（依据 PRD 规定） |
 
-## 5. System Prompt Integration
+## 5. 系统提示词集成
 
-Key prompt segment for grading:
+分级相关的关键提示词段落（英文，直接给模型用）：
 
 ```
 For every response, you MUST:

@@ -1,26 +1,26 @@
-# Interaction Flow — Mobile-First Design
+# 交互流程 — 移动端优先设计
 
-## 1. Page Architecture (3 pages)
+## 1. 页面架构（3页）
 
 ```
-[首页] ──tap──→ [对话页] ──tap source──→ [来源详情页]
+[首页] ──点击──→ [对话页] ──点击来源──→ [来源详情页]
 ```
 
-## 2. Home Page (首页)
+## 2. 首页
 
-### 2.1 Layout
+### 2.1 布局
 
 ```
 ┌──────────────────────────────┐
-│  🏥 家庭医生                  │  ← app bar, 24px title
+│  🏥 家庭医生                  │  ← 顶部栏，24px 标题
 │                              │
 │  ┌────────────────────────┐  │
-│  │ 有什么健康问题？          │  │  ← input area
+│  │ 有什么健康问题？          │  │  ← 输入区域
 │  │                        │  │
-│  │ [📷]  [🎤]        [发送] │  │  ← action buttons
+│  │ [📷]  [🎤]        [发送] │  │  ← 操作按钮
 │  └────────────────────────┘  │
 │                              │
-│  💡 你可以这样问：             │  ← prompt suggestions
+│  💡 你可以这样问：             │  ← 引导示例
 │  ┌──────────┐ ┌──────────┐  │
 │  │血压高要注意│ │体检报告看  │  │
 │  │什么？     │ │不懂       │  │
@@ -36,124 +36,124 @@
 └──────────────────────────────┘
 ```
 
-### 2.2 Key Design Decisions
+### 2.2 关键设计决策
 
-- **Input box prominent**: largest interactive element, centered vertically in upper half
-- **Font size**: base 16px, input 18px, suggestion cards 15px
-- **Suggestion cards**: 4 examples covering common scenarios, tappable → auto-fill input
-- **History**: simple list, most recent first, tap to resume conversation
-- **No login required** for MVP (stateless, history via localStorage)
+- **输入框突出**：上半区最大的交互元素，视觉焦点
+- **字体大小**：正文 16px，输入框 18px，引导卡片 15px
+- **引导卡片**：4 个常见场景示例，点击自动填入输入框
+- **历史记录**：简单列表，最近的在前，点击恢复对话
+- **MVP 不需要登录**（无状态，历史通过 localStorage 存储）
 
-### 2.3 Input Methods
+### 2.3 输入方式
 
-| Method | Entry Point | Behavior |
-|--------|-------------|----------|
-| Typing | Tap input box | Standard keyboard, 18px font for readability |
-| Voice | Tap 🎤 button | Browser Speech Recognition API → text transcription → auto-fill input box, user confirms before sending |
-| Photo | Tap 📷 button | Camera/album picker → attach image → user adds optional text context → send |
+| 方式 | 入口 | 行为 |
+|------|------|------|
+| 打字 | 点击输入框 | 标准键盘弹出，18px 字体方便阅读 |
+| 语音 | 点击 🎤 按钮 | 浏览器语音识别 API → 文字转写 → 自动填入输入框，用户确认后发送 |
+| 拍照 | 点击 📷 按钮 | 相机/相册选择 → 附加图片 → 用户可添加文字说明 → 发送 |
 
-**Voice flow detail:**
-1. Tap 🎤 → button turns red, "正在听..." label appears
-2. Speech-to-text fills input box in real-time
-3. User reviews text, can edit
-4. Tap 发送 to submit (NOT auto-send — prevents misrecognition errors)
+**语音输入详细流程：**
+1. 点击 🎤 → 按钮变红，显示"正在听..."
+2. 语音实时转文字填入输入框
+3. 用户检查文字，可编辑修改
+4. 点击"发送"提交（不自动发送——防止识别错误）
 
-## 3. Chat Page (对话页)
+## 3. 对话页
 
-### 3.1 Layout
+### 3.1 布局
 
 ```
 ┌──────────────────────────────┐
-│ ← 返回    家庭医生    [新对话] │  ← nav bar
+│ ← 返回    家庭医生    [新对话] │  ← 导航栏
 ├──────────────────────────────┤
 │                              │
-│ ┌─ User ────────────────┐   │
+│ ┌─ 用户 ────────────────┐   │
 │ │ 我血压150/95，要吃药吗？ │   │
 │ └───────────────────────┘   │
 │                              │
-│ ┌─ 🚨 RED FLAG ──────────┐  │  ← if triggered
+│ ┌─ 🚨 就医红线 ──────────┐  │  ← 如触发
 │ │ 请尽快就医...            │  │
 │ └────────────────────────┘  │
 │                              │
 │ ┌─ AI ──────────────────┐   │
-│ │ 🟡 本回答基于一般证据    │   │  ← overall grade header
+│ │ 🟡 本回答基于一般证据    │   │  ← 总等级卡片
 │ │ 来源：中国高血压指南等   │   │
 │ │ ─────────────────────  │   │
 │ │ 根据最新指南，您的血压...│   │
 │ │ ...                    │   │
 │ │ 建议：                 │   │
-│ │ • 限盐<5g/天 🟢        │   │  ← inline grade
+│ │ • 限盐<5g/天 🟢        │   │  ← 内联等级标注
 │ │ • 规律有氧运动 🟢       │   │
 │ │ • 是否用药需医生评估 🟡  │   │
 │ │ ─────────────────────  │   │
-│ │ 📚 证据来源 (2)    ▼   │   │  ← collapsible
+│ │ 📚 证据来源 (2)    ▼   │   │  ← 可折叠
 │ └────────────────────────┘  │
 │                              │
 ├──────────────────────────────┤
-│ [📷] [输入健康问题...] [🎤][↑]│  ← input bar
+│ [📷] [输入健康问题...] [🎤][↑]│  ← 底部输入栏
 └──────────────────────────────┘
 ```
 
-### 3.2 Response Rendering Flow
+### 3.2 回答渲染流程
 
 ```
-User sends message
+用户发送消息
     │
     ▼
-[Loading: "正在查阅医学资料..." with animated dots]
+[加载中："正在查阅医学资料..." + 动态省略号]
     │
     ▼
-[Stream response token by token]
+[逐字流式输出回答内容]
     │
     ▼
-[Response complete → render grade header + source footer]
+[回答完成 → 渲染总等级卡片 + 来源脚注]
 ```
 
-- Streaming: tokens appear progressively (typewriter effect)
-- Grade header appears AFTER full response (needs complete context to determine overall grade)
-- Inline badges render with each sentence as it streams
+- 流式输出：逐 token 显示（打字机效果）
+- 总等级卡片在回答完成后出现（需要完整上下文才能确定总等级）
+- 内联标记随句子流式输出实时渲染
 
-### 3.3 Image Upload Flow
+### 3.3 图片上传流程
 
 ```
-User taps 📷
+用户点击 📷
     │
-    ├─ Camera (拍照)
-    │   └─ Capture → preview → confirm
+    ├─ 拍照
+    │   └─ 拍摄 → 预览 → 确认
     │
-    └─ Album (相册)
-        └─ Pick → preview → confirm
+    └─ 相册
+        └─ 选择 → 预览 → 确认
             │
             ▼
-[Image thumbnail appears in chat + text input prompt: "请描述您的问题"]
+[图片缩略图出现在聊天中 + 文字输入提示："请描述您的问题"]
             │
             ▼
-User adds context (optional) → sends
+用户添加说明（可选）→ 发送
             │
             ▼
-AI response with image analysis + always 🔴 if symptom photo
+AI 回答含图片分析 + 如为症状照片则一律标 🔴
 ```
 
-### 3.4 Interaction Details
+### 3.4 交互细节
 
-| Element | Tap Action |
-|---------|------------|
-| Inline grade badge (🟢🟡🔵🔴) | Bottom sheet: source name + evidence type |
-| "📚 证据来源" | Expand/collapse source list |
-| Source item in list | Navigate to 来源详情页 |
-| Red flag "查看附近医院" | Open device maps |
-| "新对话" button | Clear context, start fresh (confirm if current chat has content) |
+| 元素 | 点击行为 |
+|------|---------|
+| 内联等级标记（🟢🟡🔵🔴） | 底部浮层：显示来源名称 + 证据类型 |
+| "📚 证据来源" | 展开/折叠来源列表 |
+| 来源列表中的条目 | 跳转到来源详情页 |
+| 红线横幅"查看附近医院" | 打开设备地图 |
+| "新对话"按钮 | 清空上下文，重新开始（当前有内容时需确认） |
 
-## 4. Source Detail Page (来源详情页)
+## 4. 来源详情页
 
-### 4.1 Layout
+### 4.1 布局
 
 ```
 ┌──────────────────────────────┐
 │ ← 返回          证据来源详情  │
 ├──────────────────────────────┤
 │                              │
-│ 📖 中国高血压防治指南(2024)    │  ← title
+│ 📖 中国高血压防治指南(2024)    │  ← 标题
 │ ─────────────────────────── │
 │ 发布机构：中华医学会           │
 │ 证据等级：🟢 强证据           │
@@ -166,50 +166,50 @@ AI response with image analysis + always 🔴 if symptom photo
 │  3-6个月生活方式干预..."      │
 │                              │
 │ ─────────────────────────── │
-│ 🔗 查看原文                  │  ← external link if available
+│ 🔗 查看原文                  │  ← 外部链接（如有）
 │                              │
 └──────────────────────────────┘
 ```
 
-### 4.2 Content Strategy
+### 4.2 内容策略
 
-- Show actual RAG chunk that was used (excerpt, not full document)
-- Source metadata: publisher, year, evidence type
-- External link when available (some guidelines are publicly accessible)
-- If source is PubMed paper: show title, authors, journal, DOI link
+- 展示实际被引用的 RAG 文本块（摘录，非全文）
+- 来源元数据：发布机构、年份、证据类型
+- 外部链接（部分指南有公开可访问的原文）
+- 如来源为 PubMed 论文：显示标题、作者、期刊、DOI 链接
 
-## 5. Accessibility for Elderly Users
+## 5. 适老化设计
 
-### 5.1 Font & Touch
+### 5.1 字体与触控
 
-| Element | Size | Touch Target |
-|---------|------|-------------|
-| Body text | 16px min | — |
-| Input text | 18px | — |
-| Buttons | 16px label | 48×48px min |
-| Suggestion cards | 15px | 44px height min |
-| Grade badges | 12px icon + 14px tooltip | 36×36px tap area |
+| 元素 | 尺寸 | 触控区域 |
+|------|------|---------|
+| 正文 | 最小 16px | — |
+| 输入框文字 | 18px | — |
+| 按钮 | 标签 16px | 最小 48×48px |
+| 引导卡片 | 15px | 最小高度 44px |
+| 等级标记 | 图标 12px + 提示 14px | 点击区 36×36px |
 
-### 5.2 Color & Contrast
+### 5.2 色彩与对比度
 
-- All text: contrast ratio ≥ 4.5:1 (WCAG AA)
-- Grade colors used with icon+text (never color alone) for color-blind users
-- Dark mode: NOT in MVP (reduces complexity, elderly users rarely use it)
+- 所有文字：对比度 ≥ 4.5:1（WCAG AA 标准）
+- 等级颜色配合图标+文字使用（不单独依赖颜色），兼顾色盲用户
+- 深色模式：MVP 不做（降低复杂度，中老年用户很少使用）
 
-### 5.3 Interaction Simplicity
+### 5.3 交互简洁性
 
-- Maximum 2 taps to any function
-- No swipe gestures required (all actions via visible buttons)
-- No infinite scroll — paginated history (20 items/page)
-- Clear "返回" button, no rely on system back gesture alone
-- Error states: plain Chinese ("网络不好，请稍后再试"), never show technical errors
+- 任何功能最多 2 步到达
+- 不依赖滑动手势（所有操作通过可见按钮完成）
+- 历史记录不使用无限滚动——分页显示（每页 20 条）
+- 明确的"返回"按钮，不依赖系统返回手势
+- 错误提示用大白话："网络不好，请稍后再试"，绝不显示技术报错
 
-## 6. Responsive Behavior
+## 6. 响应式适配
 
-| Viewport | Layout |
-|----------|--------|
-| < 480px (phone) | Default, single column |
-| 480-768px (large phone/small tablet) | Same layout, slightly wider margins |
-| > 768px (tablet/desktop) | Centered 480px-max content column, larger fonts (+2px) |
+| 屏幕宽度 | 布局 |
+|---------|------|
+| < 480px（手机） | 默认，单列布局 |
+| 480-768px（大屏手机/小平板） | 相同布局，略宽边距 |
+| > 768px（平板/电脑） | 居中 480px 最大宽度内容列，字体 +2px |
 
-MVP is mobile-first; desktop is passable but not optimized.
+MVP 以移动端为主；桌面端可用但不专门优化。
