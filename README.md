@@ -2,7 +2,8 @@
 
 > 基于权威医学指南的 AI 健康问答工具，为中国家庭提供可追溯、有证据等级的健康建议。
 
-![首页](output/screenshot-home.png)
+<img width="1087" height="881" alt="image" src="https://github.com/user-attachments/assets/a2f32936-d4e1-4662-bc77-8d49f12d8dcc" />
+
 
 ## 为什么做这个
 
@@ -120,7 +121,7 @@ evidence-family-doctor/
 ## 设计决策
 
 1. **为什么用 BM25 而非向量检索？** — 中转 API 不支持 embedding；29 条文档关键词检索已够用；零成本零延迟
-2. **为什么前端不用 React/Vue？** — 3 个文件、零构建，面试官 clone 后能直接跑，降低理解门槛
+2. **为什么前端不用 React/Vue？** — 3 个文件、零构建，方便快捷
 3. **为什么证据等级用 emoji？** — 中老年用户认知成本最低，颜色+图标双通道信息传递
 4. **就医红线为什么让 AI 判断而非关键词匹配？** — 关键词漏报率高，LLM 能理解语义上下文
 
